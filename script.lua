@@ -1,1030 +1,138 @@
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
-
-local player = Players.LocalPlayer
-local DISCORD_LINK = "https://discord.gg/QaAa3qBdSX"
-
--- MENU TOGGLE KEY
-local menuToggleKey = Enum.KeyCode.LeftControl
-local waitingForKeybind = false
-
--- SETTINGS
-local flySpeed = 70
-local walkSpeed = 16
-local flying = false
-local noclip = false
-local espEnabled = false
-
-local BV
-local BG
-
-local keys = {W=false,A=false,S=false,D=false,Space=false,Ctrl=false}
-
--- COLORS
-local bg = Color3.fromRGB(25,25,25)
-local accent = Color3.fromRGB(0,0,0)
-local buttonColor = Color3.fromRGB(40,40,55)
-local buttonHover = Color3.fromRGB(65,65,95)
-
--- TEXT OUTLINE FUNCTION
-local function outlineText(obj)
-	obj.TextStrokeTransparency = 0
-	obj.TextStrokeColor3 = Color3.new(0,0,0)
-end
-
--- BUTTON CREATOR
-local function makeButton(text,x,y,parent)
-	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(0,180,0,35)
-	b.Position = UDim2.new(0,x,0,y)
-	b.Text = text
-	b.BackgroundColor3 = buttonColor
-	b.TextColor3 = Color3.new(1,1,1)
-
-	-- TEXT OUTLINE
-	b.TextStrokeTransparency = 0
-	b.TextStrokeColor3 = Color3.new(0,0,0)
-
-	b.Parent = parent
-
-	-- ROUNDED EDGES
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0,8) -- smooth roundness
-	corner.Parent = b
-
-b.MouseEnter:Connect(function()
-	TweenService:Create(b,TweenInfo.new(0.15),{
-		BackgroundColor3 = buttonHover
-	}):Play()
-end)
-
-b.MouseLeave:Connect(function()
-	TweenService:Create(b,TweenInfo.new(0.15),{
-		BackgroundColor3 = buttonColor
-	}):Play()
-end)
-
-	return b
-end
-
--- GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "BLACK FLAG"
-gui.Parent = game.CoreGui
-
--- BLUR BACKGROUND
-if game.Lighting:FindFirstChildOfClass("BlurEffect") then
-	game.Lighting:FindFirstChildOfClass("BlurEffect"):Destroy()
-end
-
-local blur = Instance.new("BlurEffect")
-blur.Size = 0
-blur.Parent = game.Lighting
-
-local main = Instance.new("Frame")
-main.Size = UDim2.new(0,440,0,340)
-main.Position = UDim2.new(0.5,-220,0.5,-170)
-main.BackgroundColor3 = bg
-main.Active = true
-main.Draggable = true
-main.Parent = gui
-
-local TweenService = game:GetService("TweenService")
-
--- KEY SYSTEM
-local MENU_KEY = "1234"
-
--- hide main hub initially
-main.Position = UDim2.new(-1,-440,0.5,-170)
-
--- KEY PANEL
-local keyFrame = Instance.new("Frame")
-keyFrame.Size = UDim2.new(0,320,0,220)
-keyFrame.Position = UDim2.new(0.5,-160,0.5,-110)
-keyFrame.BackgroundColor3 = bg
-keyFrame.Parent = gui
-
-local keyTitle = Instance.new("TextLabel")
-keyTitle.Size = UDim2.new(1,0,0,40)
-keyTitle.Text = "BLACK FLAG Key System"
-keyTitle.TextScaled = true
-keyTitle.BackgroundTransparency = 1
-keyTitle.TextColor3 = Color3.new(1,1,1)
-keyTitle.Parent = keyFrame
-outlineText(keyTitle)
-
--- RAINBOW ANIMATION FOR TITLE
-RunService.RenderStepped:Connect(function()
-	local hue = (tick() % 5) / 5
-	local rainbow = Color3.fromHSV(hue,1,1)
-
-	if keyTitle then
-		keyTitle.TextColor3 = rainbow
-	end
-end)
-
-local keyInfo = Instance.new("TextLabel")
-keyInfo.Size = UDim2.new(1,-20,0,30)
-keyInfo.Position = UDim2.new(0,10,0,35)
-keyInfo.Text = "Get the key from our Discord server"
-keyInfo.TextScaled = true
-keyInfo.BackgroundTransparency = 1
-keyInfo.TextColor3 = Color3.fromRGB(200,200,200)
-keyInfo.Parent = keyFrame
-outlineText(keyInfo)
-
--- DISCORD BUTTON
-local discordButton = Instance.new("TextButton")
-discordButton.Size = UDim2.new(0,200,0,35)
-discordButton.Position = UDim2.new(0.5,-100,0,70)
-discordButton.Text = "  Copy Discord Invite"
-discordButton.BackgroundColor3 = accent
-discordButton.TextColor3 = Color3.new(1,1,1)
-discordButton.TextScaled = true
-discordButton.Parent = keyFrame
-outlineText(discordButton)
-
-local discordIcon = Instance.new("ImageLabel")
-discordIcon.Size = UDim2.new(0,22,0,22)
-discordIcon.Position = UDim2.new(0,6,0.5,-11)
-discordIcon.BackgroundTransparency = 1
-discordIcon.Parent = discordButton
-
-discordButton.MouseButton1Click:Connect(function()
-	if setclipboard then
-		setclipboard(DISCORD_LINK)
-	end
-end)
-
--- KEY INPUT BOX
-local keyBox = Instance.new("TextBox")
-keyBox.Size = UDim2.new(0.8,0,0,35)
-keyBox.Position = UDim2.new(0.1,0,0,115)
-keyBox.PlaceholderText = "Enter Key..."
-keyBox.Text = ""
-keyBox.TextScaled = true
-keyBox.BackgroundColor3 = buttonColor
-keyBox.TextColor3 = Color3.new(1,1,1)
-keyBox.Parent = keyFrame
-outlineText(keyBox)
-
--- SUBMIT BUTTON
-local submit = Instance.new("TextButton")
-submit.Size = UDim2.new(0.6,0,0,35)
-submit.Position = UDim2.new(0.2,0,0,160)
-submit.Text = "Submit"
-submit.TextScaled = true
-submit.BackgroundColor3 = accent
-submit.TextColor3 = Color3.new(1,1,1)
-submit.Parent = keyFrame
-outlineText(submit)
-
--- STATUS TEXT
-local status = Instance.new("TextLabel")
-status.Size = UDim2.new(1,0,0,20)
-status.Position = UDim2.new(0,0,1,-20)
-status.BackgroundTransparency = 1
-status.TextColor3 = Color3.fromRGB(255,80,80)
-status.TextScaled = true
-status.Text = ""
-status.Parent = keyFrame
-outlineText(status)
-
--- KEY CHECK
-submit.MouseButton1Click:Connect(function()
-	if keyBox.Text == MENU_KEY then
-		for _,v in pairs(keyFrame:GetChildren()) do
-			if v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox") then
-				TweenService:Create(v,TweenInfo.new(0.35),{
-					TextTransparency = 1,
-					BackgroundTransparency = 1
-				}):Play()
-			end
-		end
-
-		TweenService:Create(keyFrame,TweenInfo.new(0.35),{
-			BackgroundTransparency = 1
-		}):Play()
-
-		task.wait(0.35)
-		keyFrame:Destroy()
-
-		local openTween = TweenService:Create(
-			main,
-			TweenInfo.new(0.4,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
-			{Position = UDim2.new(0.5,-220,0.5,-170)}
-		)
-
-		openTween:Play()
-		TweenService:Create(blur, TweenInfo.new(0.3), {Size = 14}):Play()
-	else
-		status.Text = "Invalid Key"
-	end
-end)
-
--- TOP BAR
-local topBar = Instance.new("Frame")
-topBar.Size = UDim2.new(1,0,0,35)
-topBar.BackgroundColor3 = accent
-topBar.Parent = main
-local topbarCorner = Instance.new("UICorner")
-topbarCorner.CornerRadius = UDim.new(0,12)
-topbarCorner.Parent = topBar
-
--- TITLE CONTAINER
-local titleContainer = Instance.new("Frame")
-titleContainer.Size = UDim2.new(0,200,1,0)
-titleContainer.Position = UDim2.new(0,10,0,0)
-titleContainer.BackgroundTransparency = 1
-titleContainer.Parent = topBar
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0,12)
-titleCorner.Parent = titleContainer
-
--- BLACK TEXT
-local blackText = Instance.new("TextLabel")
-blackText.Size = UDim2.new(0,80,0.8,0)
-blackText.Position = UDim2.new(0,0,0.1,0)
-blackText.Text = "BLACK"
-blackText.TextScaled = true
-blackText.TextColor3 = Color3.new(0,0,0)
-blackText.BackgroundColor3 = Color3.new(1,1,1)
-blackText.BorderSizePixel = 0
-blackText.Parent = titleContainer
-local blackCorner = Instance.new("UICorner")
-blackCorner.CornerRadius = UDim.new(0,7)
-blackCorner.Parent = blackText
-
-
--- FLAG TEXT
-local flagText = Instance.new("TextLabel")
-flagText.Size = UDim2.new(0,70,0.8,0)
-flagText.Position = UDim2.new(0,85,0.1,0)
-flagText.Text = "FLAG"
-flagText.TextScaled = true
-flagText.TextColor3 = Color3.new(1,1,1)
-flagText.BackgroundColor3 = Color3.new(0,0,0)
-flagText.BorderSizePixel = 0
-flagText.Parent = titleContainer
-
-local close = Instance.new("TextButton")
-close.Size = UDim2.new(0,35,1,0)
-close.Position = UDim2.new(1,-35,0,0)
-close.Text = "X"
-close.BackgroundColor3 = Color3.fromRGB(1000,1000,1000)
-close.TextColor3 = Color3.new(1,1,1)
-close.Parent = topBar
-outlineText(close)
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0,12)
-closeCorner.Parent = close
-
-
-close.MouseButton1Click:Connect(function()
-
-	-- remove blur effect completely
-	if blur and blur.Parent then
-		blur:Destroy()
-	end
-
-	gui:Destroy()
-end)
-
--- TAB BAR
-local tabBar = Instance.new("Frame")
-tabBar.Size = UDim2.new(1,0,0,30)
-tabBar.Position = UDim2.new(0,0,0,35)
-tabBar.BackgroundColor3 = Color3.fromRGB(20,20,30)
-tabBar.Parent = main
-local tabCorner = Instance.new("UICorner")
-tabCorner.CornerRadius = UDim.new(0,12)
-tabCorner.Parent = tabBar
-
-local function createTabButton(name,pos)
-	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(0.2,0,1,0)
-	b.Position = pos
-	b.Text = name
-	b.BackgroundColor3 = buttonColor
-	b.TextColor3 = Color3.new(1,1,1)
-	b.Parent = tabBar
-	outlineText(b)
-
-	b.MouseEnter:Connect(function()
-		b.BackgroundColor3 = buttonHover
-	end)
-
-	b.MouseLeave:Connect(function()
-		b.BackgroundColor3 = buttonColor
-	end)
-
-	return b
-end
-
--- Create Tab Buttons
-local mainTabButton = createTabButton("Main", UDim2.new(0, 0, 0, 0))
-local playerTabButton = createTabButton("Player", UDim2.new(0.2, 0, 0, 0))
-local viewTabButton = createTabButton("View", UDim2.new(0.4, 0, 0, 0))
-local serverTabButton = createTabButton("Server", UDim2.new(0.6, 0, 0, 0))
-local settingsTabButton = createTabButton("Settings", UDim2.new(0.8, 0, 0, 0))
-
--- Debug: Print buttons to check if they are created
-print(mainTabButton, playerTabButton, viewTabButton, serverTabButton, settingsTabButton)
-
--- CONTAINER
-local container = Instance.new("Frame")
-container.Size = UDim2.new(1,0,1,-65)
-container.Position = UDim2.new(0,0,0,65)
-container.BackgroundTransparency = 1
-container.Parent = main
-local cCorner = Instance.new("UICorner")
-cCorner.CornerRadius = UDim.new(0,12)
-cCorner.Parent = container
-
--- MAIN TAB
-local mainTab = Instance.new("Frame")
-mainTab.Size = UDim2.new(1,0,1,0)
-mainTab.BackgroundTransparency = 1
-mainTab.Parent = container
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(0,0,0)
-stroke.Thickness = 4
-stroke.Parent = main
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0,12)
-mainCorner.Parent = main
-
-local owner = Instance.new("TextLabel")
-owner.Size = UDim2.new(1,0,0,35)
-owner.Position = UDim2.new(0,0,0,20)
-owner.Text = "Owner: ssxge"
-owner.TextScaled = true
-owner.BackgroundTransparency = 1
-owner.Parent = mainTab
-outlineText(owner)
-
-local support = Instance.new("TextLabel")
-support.Size = UDim2.new(1,0,0,25)
-support.Position = UDim2.new(0,0,0,60)
-support.Text = "Staff: Junior"
-support.TextScaled = true
-support.BackgroundTransparency = 1
-support.TextColor3 = Color3.fromRGB(170,0,255)
-support.Parent = mainTab
-outlineText(support)
-
-local discordInfo = Instance.new("TextLabel")
-discordInfo.Size = UDim2.new(1,0,0,25)
-discordInfo.Position = UDim2.new(0,0,0,95)
-discordInfo.Text = "Press button to copy Discord invite"
-discordInfo.BackgroundTransparency = 1
-discordInfo.TextColor3 = Color3.fromRGB(200,200,200)
-discordInfo.Parent = mainTab
-discordInfo.TextScaled = true
-outlineText(discordInfo)
-
-local discordButton = Instance.new("TextButton")
-discordButton.Size = UDim2.new(0,220,0,40)
-discordButton.Position = UDim2.new(0.5,-110,0,130)
-discordButton.Text = "  Copy Discord Invite"
-discordButton.BackgroundColor3 = accent
-discordButton.TextColor3 = Color3.new(1,133,1)
-discordButton.Parent = mainTab
-outlineText(discordButton)
-
--- DISCORD ICON
-local discordIcon = Instance.new("ImageLabel")
-discordIcon.Size = UDim2.new(0,24,0,24)
-discordIcon.Position = UDim2.new(0,8,0.5,-12)
-discordIcon.BackgroundTransparency = 1
-discordIcon.Image = "rbxassetid://6031075938"
-discordIcon.Parent = discordButton
-
-discordButton.MouseButton1Click:Connect(function()
-	if setclipboard then
-		setclipboard(DISCORD_LINK)
-	end
-end)
-
--- PLAYER TAB
-local playerTab = Instance.new("ScrollingFrame")
-playerTab.Size = UDim2.new(1,0,1,0)
-playerTab.Visible = false
-playerTab.Active = true
-playerTab.CanvasSize = UDim2.new(0,0,0,0)
-playerTab.AutomaticCanvasSize = Enum.AutomaticSize.Y
-playerTab.ScrollBarThickness = 6
-playerTab.BackgroundTransparency = 1
-playerTab.Parent = container
-playerTab.ScrollingEnabled = true
-playerTab.ScrollBarImageTransparency = 0
-
--- VIEW TAB
-local viewTab = Instance.new("ScrollingFrame")
-viewTab.Size = UDim2.new(1,0,1,0)
-viewTab.Visible = false
-viewTab.Active = true
-viewTab.CanvasSize = UDim2.new(0,0,0,0)
-viewTab.AutomaticCanvasSize = Enum.AutomaticSize.Y
-viewTab.ScrollBarThickness = 6
-viewTab.BackgroundTransparency = 1
-viewTab.Parent = container
-viewTab.ScrollingEnabled = true
-viewTab.ScrollBarImageTransparency = 0
-
--- SERVER TAB
-local serverTab = Instance.new("ScrollingFrame")
-serverTab.Size = UDim2.new(1,0,1,0)
-serverTab.Visible = false
-serverTab.Active = true
-serverTab.BackgroundTransparency = 1
-serverTab.CanvasSize = UDim2.new(0,0,0,0)
-serverTab.AutomaticCanvasSize = Enum.AutomaticSize.Y
-serverTab.ScrollBarThickness = 6
-serverTab.Parent = container
-serverTab.ScrollingEnabled = true
-serverTab.ScrollBarImageTransparency = 0
-
--- SETTINGS TAB
-local settingsTab = Instance.new("ScrollingFrame")
-settingsTab.Size = UDim2.new(1,0,1,0)
-settingsTab.Visible = false
-settingsTab.Active = true
-settingsTab.CanvasSize = UDim2.new(0,0,0,0)
-settingsTab.AutomaticCanvasSize = Enum.AutomaticSize.Y
-settingsTab.ScrollBarThickness = 6
-settingsTab.BackgroundTransparency = 1
-settingsTab.Parent = container
-settingsTab.ScrollingEnabled = true
-settingsTab.ScrollBarImageTransparency = 0
-
-local menuOpen = true
-
-local function toggleMenu()
-	menuOpen = not menuOpen
-
-	if menuOpen then
-	main.Visible = true
-	main.Size = UDim2.new(0,0,0,0)
-
-	TweenService:Create(main,
-		TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{Size = UDim2.new(0,440,0,340)}
-	):Play()
-
-	TweenService:Create(blur,TweenInfo.new(0.3),{Size = 14}):Play()
-
-else
-	local tween = TweenService:Create(main,
-		TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-		{Size = UDim2.new(0,0,0,0)}
-	)
-
-	tween:Play()
-	tween.Completed:Wait()
-
-	main.Visible = false
-	TweenService:Create(blur,TweenInfo.new(0.3),{Size = 0}):Play()
-end
-end
-
--- Keybind Button
-local keybindButton = makeButton("Set Open/Close Keybind", 20, 20, settingsTab)
-
-keybindButton.MouseButton1Click:Connect(function()
-	keybindButton.Text = "Press any key..."
-	waitingForKeybind = true
-end)
-
--- KEY INPUT
-UIS.InputBegan:Connect(function(input, gp)
-	if gp then return end
-
-	-- KEYBIND CHANGE MODE
-if waitingForKeybind then
-	waitingForKeybind = false
-	menuToggleKey = input.KeyCode
-	keybindButton.Text = "Menu Key: " .. input.KeyCode.Name
-	task.wait() -- prevents instant toggle
-	return
-end
-
-	-- MENU TOGGLE
-	if input.KeyCode == menuToggleKey then
-		toggleMenu()
-	end
-
-	-- MOVEMENT KEYS
-	if input.KeyCode == Enum.KeyCode.W then keys.W = true end
-	if input.KeyCode == Enum.KeyCode.A then keys.A = true end
-	if input.KeyCode == Enum.KeyCode.S then keys.S = true end
-	if input.KeyCode == Enum.KeyCode.D then keys.D = true end
-	if input.KeyCode == Enum.KeyCode.Space then keys.Space = true end
-	if input.KeyCode == Enum.KeyCode.LeftControl then keys.Ctrl = true end
-end)
-
-local viewing = false
-local viewedPlayer = nil
-
--- USERNAME INPUT
-local flingInput = Instance.new("TextBox")
-flingInput.Size = UDim2.new(0,220,0,35)
-flingInput.Position = UDim2.new(0.5,-110,0,20)
-flingInput.PlaceholderText = "Enter username or 'all'"
-flingInput.Text = ""
-flingInput.TextScaled = true
-flingInput.BackgroundColor3 = buttonColor
-flingInput.TextColor3 = Color3.new(1,1,1)
-flingInput.Parent = serverTab
-outlineText(flingInput)
-
--- FLING BUTTON
-local flingButton = makeButton("Fling Player",20,70,serverTab)
-
--- TELEPORT BUTTON (right column)
-local teleportButton = makeButton("Teleport To Player",240,70,serverTab)
-
--- VIEW PLAYER BUTTON
-local viewPlayerButton = makeButton("View Player",20,120,serverTab)
-
--- BETTER TAB SYSTEM
-local tabs = {
-	Main = mainTab,
-	Player = playerTab,
-	View = viewTab,
-	Server = serverTab,
-	Settings = settingsTab
-}
-
-local function switchTab(tabName)
-	for name, frame in pairs(tabs) do
-		frame.Visible = (name == tabName)
-	end
-end
-
-mainTabButton.MouseButton1Click:Connect(function()
-	print("Switching to Main Tab") -- Debug
-	switchTab("Main")
-end)
-
-playerTabButton.MouseButton1Click:Connect(function()
-	print("Switching to Player Tab") -- Debug
-	switchTab("Player")
-end)
-
-viewTabButton.MouseButton1Click:Connect(function()
-	print("Switching to View Tab") -- Debug
-	switchTab("View")
-end)
-
-serverTabButton.MouseButton1Click:Connect(function()
-	print("Switching to Server Tab") -- Debug
-	switchTab("Server")
-end)
-
-settingsTabButton.MouseButton1Click:Connect(function()
-	print("Switching to Settings Tab") -- Debug
-	switchTab("Settings")
-end)
-
--- default tab
-task.wait()
-switchTab("Main")
-
--- PLAYER TAB LAYOUT
-local col1 = 20
-local col2 = 240
-local y = 20
-
-local flyButton = makeButton("Fly",col1,y,playerTab)
-local noclipButton = makeButton("Noclip",col2,y,playerTab)
-
-y = y + 40
-
--- FLY SPEED
-local flySpeedLabel = Instance.new("TextLabel")
-flySpeedLabel.Size = UDim2.new(0,180,0,25)
-flySpeedLabel.Position = UDim2.new(0,col1,0,y)
-flySpeedLabel.Text = "Fly Speed: "..flySpeed
-flySpeedLabel.BackgroundTransparency = 1
-flySpeedLabel.TextColor3 = Color3.new(1,1,1)
-flySpeedLabel.Parent = playerTab
-outlineText(flySpeedLabel)
-
-local flyMinus = makeButton("-",col1,y+25,playerTab)
-flyMinus.Size = UDim2.new(0,80,0,30)
-
-local flyPlus = makeButton("+",col1+90,y+25,playerTab)
-flyPlus.Size = UDim2.new(0,80,0,30)
-
--- FLING
-local function getPlayerFromName(name)
-	name = name:lower()
-
-	for _,plr in pairs(Players:GetPlayers()) do
-		if plr.Name:lower():sub(1,#name) == name then
-			return plr
-		end
-	end
-end
-
-local function flingPlayer(target)
-	if not target.Character then return end
-	if not player.Character then return end
-
-	local myHRP = player.Character:FindFirstChild("HumanoidRootPart")
-	local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
-
-	if not myHRP or not targetHRP then return end
-
-	-- SAVE ORIGINAL POSITION
-	local originalCFrame = myHRP.CFrame
-
-	-- BODY VELOCITY
-	local bv = Instance.new("BodyVelocity")
-	bv.MaxForce = Vector3.new(1e10,1e10,1e10)
-	bv.Parent = myHRP
-
-	-- BODY GYRO (SPIN)
-	local bg = Instance.new("BodyGyro")
-	bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
-	bg.P = 9e4
-	bg.Parent = myHRP
-
-	for i = 1,140 do
-		if not target.Character then break end
-
-		targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
-		if not targetHRP then break end
-
-		-- lock directly inside player
-		myHRP.CFrame = targetHRP.CFrame
-
-		-- insane spin in random directions
-		myHRP.AssemblyAngularVelocity = Vector3.new(
-			math.random(-5000,5000),
-			math.random(-5000,5000),
-			math.random(-5000,5000)
-		)
-
-		-- extremely strong fling force
-		bv.Velocity = Vector3.new(
-			math.random(-2500,2500),
-			math.random(800,1600),
-			math.random(-2500,2500)
-		)
-
-		RunService.Heartbeat:Wait()
-	end
-
-	bv:Destroy()
-	bg:Destroy()
-
-	-- stop momentum
-	myHRP.AssemblyLinearVelocity = Vector3.zero
-	myHRP.AssemblyAngularVelocity = Vector3.zero
-
-	task.wait()
-
-	-- teleport back
-	myHRP.CFrame = originalCFrame
-end
-
--- Player teleport
-local function teleportToPlayer(target)
-	if not target.Character then return end
-	if not player.Character then return end
-
-	local myHRP = player.Character:FindFirstChild("HumanoidRootPart")
-	local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
-
-	if not myHRP or not targetHRP then return end
-
-	-- teleport slightly behind player
-	myHRP.CFrame = targetHRP.CFrame * CFrame.new(0,0,-3)
-end
-
-flingButton.MouseButton1Click:Connect(function()
-	local text = flingInput.Text
-
-	if text == "" then return end
-
-	if text:lower() == "all" then
-		for _,plr in pairs(Players:GetPlayers()) do
-			if plr ~= player then
-				flingPlayer(plr)
-				task.wait(0.3)
-			end
-		end
-	else
-		local target = getPlayerFromName(text)
-
-		if target and target ~= player then
-			flingPlayer(target)
-		end
-	end
-end)
-
-teleportButton.MouseButton1Click:Connect(function()
-	local text = flingInput.Text
-
-	if text == "" then return end
-
-	if text:lower() == "all" then
-		for _,plr in pairs(Players:GetPlayers()) do
-			if plr ~= player then
-				teleportToPlayer(plr)
-				task.wait(0.4)
-			end
-		end
-	else
-		local target = getPlayerFromName(text)
-
-		if target and target ~= player then
-			teleportToPlayer(target)
-		end
-	end
-end)
-
-local camera = workspace.CurrentCamera
-
-viewPlayerButton.MouseButton1Click:Connect(function()
-	if viewing then
-		-- RETURN TO YOURSELF
-		if player.Character and player.Character:FindFirstChild("Humanoid") then
-			camera.CameraSubject = player.Character.Humanoid
-		end
-
-		viewing = false
-		viewedPlayer = nil
-		viewPlayerButton.Text = "View Player"
-		return
-	end
-
-	local text = flingInput.Text
-	if text == "" then return end
-
-	local target = getPlayerFromName(text)
-
-	if target and target.Character then
-		local hum = target.Character:FindFirstChildOfClass("Humanoid")
-		if hum then
-			camera.CameraSubject = hum
-			viewing = true
-			viewedPlayer = target
-			viewPlayerButton.Text = "Stop Viewing"
-		end
-	end
-end)
-
--- WALKSPEED
-local wsLabel = Instance.new("TextLabel")
-wsLabel.Size = UDim2.new(0,180,0,25)
-wsLabel.Position = UDim2.new(0,col2,0,y)
-wsLabel.Text = "WalkSpeed: "..walkSpeed
-wsLabel.BackgroundTransparency = 1
-wsLabel.TextColor3 = Color3.new(1,1,1)
-wsLabel.Parent = playerTab
-outlineText(wsLabel)
-
-local wsMinus = makeButton("-",col2,y+25,playerTab)
-wsMinus.Size = UDim2.new(0,80,0,30)
-
-local wsPlus = makeButton("+",col2+90,y+25,playerTab)
-wsPlus.Size = UDim2.new(0,80,0,30)
-
--- SPEED CHANGERS
-flyPlus.MouseButton1Click:Connect(function()
-	flySpeed += 20
-	flySpeedLabel.Text = "Fly Speed: "..flySpeed
-end)
-
-flyMinus.MouseButton1Click:Connect(function()
-	flySpeed = math.max(10,flySpeed-20)
-	flySpeedLabel.Text = "Fly Speed: "..flySpeed
-end)
-
-wsPlus.MouseButton1Click:Connect(function()
-	walkSpeed += 5
-	wsLabel.Text = "WalkSpeed: "..walkSpeed
-	local h = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-	if h then h.WalkSpeed = walkSpeed end
-end)
-
-wsMinus.MouseButton1Click:Connect(function()
-	walkSpeed = math.max(5,walkSpeed-5)
-	wsLabel.Text = "WalkSpeed: "..walkSpeed
-	local h = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-	if h then h.WalkSpeed = walkSpeed end
-end)
-
-RunService.RenderStepped:Connect(function()
-	-- rainbow color
-	local hue = (tick() % 5) / 5
-	local rainbow = Color3.fromHSV(hue,1,1)
-
-	-- owner text rainbow
-	if owner then
-		owner.TextColor3 = rainbow
-	end
-
-	-- ESP rainbow
-	if espEnabled then
-		for _,esp in pairs(espObjects) do
-			if esp then
-				esp.OutlineColor = rainbow
-			end
-		end
-	end
-end)
-
--- ESP
-local espObjects = {}
-
-local function addESP(plr)
-	if plr == player then return end
-
-	local function create(char)
-		if espObjects[plr] then
-			espObjects[plr]:Destroy()
-		end
-
-		local h = Instance.new("Highlight")
-		h.FillTransparency = 1
-		h.OutlineTransparency = 0
-		h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		h.Adornee = char
-
-		-- set initial rainbow color
-		local hue = (tick() % 5) / 5
-		h.OutlineColor = Color3.fromHSV(hue,1,1)
-
-		h.Parent = char
-		espObjects[plr] = h
-	end
-
-	if plr.Character then
-		create(plr.Character)
-	end
-
-	plr.CharacterAdded:Connect(create)
-end
-
-local function removeESP()
-	for _,plr in pairs(Players:GetPlayers()) do
-		if plr.Character then
-			for _,v in pairs(plr.Character:GetChildren()) do
-				if v:IsA("Highlight") then
-					v:Destroy()
-				end
-			end
-		end
-	end
-	espObjects = {}
-end
-
-local espButton = makeButton("Toggle ESP",120,40,viewTab)
-
-espButton.MouseButton1Click:Connect(function()
-	espEnabled = not espEnabled
-
-	if espEnabled then
-		for _,plr in pairs(Players:GetPlayers()) do
-			addESP(plr)
-		end
-		espButton.Text = "ESP: ON"
-	else
-		removeESP()
-		espButton.Text = "Toggle ESP"
-	end
-end)
-
-RunService.RenderStepped:Connect(function()
-	local hue = (tick() % 5) / 5
-	local rainbow = Color3.fromHSV(hue,1,1)
-
-	-- rainbow owner text
-	if owner then
-		owner.TextColor3 = rainbow
-	end
-
-	-- rainbow esp
-	if espEnabled then
-		for _,highlight in pairs(espObjects) do
-			if highlight then
-				highlight.OutlineColor = rainbow
-			end
-		end
-	end
-end)
-
--- APPLY WALKSPEED ON RESPAWN
-player.CharacterAdded:Connect(function(char)
-	local hum = char:WaitForChild("Humanoid")
-	hum.WalkSpeed = walkSpeed
-end)
-
--- NOCLIP SYSTEM
-RunService.Stepped:Connect(function()
-	if noclip and player.Character then
-		for _,part in pairs(player.Character:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.CanCollide = false
-			end
-		end
-	end
-end)
-
-noclipButton.MouseButton1Click:Connect(function()
-	noclip = not noclip
-
-	if noclip then
-		noclipButton.Text = "Noclip: ON"
-	else
-		noclipButton.Text = "Noclip"
-	end
-end)
-
--- FLY FUNCTIONS
-local function startFly()
-	local char = player.Character
-	if not char then return end
-
-	local hrp = char:FindFirstChild("HumanoidRootPart")
-	if not hrp then return end
-
-	BV = Instance.new("BodyVelocity")
-	BV.MaxForce = Vector3.new(9e9,9e9,9e9)
-	BV.Velocity = Vector3.zero
-	BV.Parent = hrp
-
-	BG = Instance.new("BodyGyro")
-	BG.MaxTorque = Vector3.new(9e9,9e9,9e9)
-	BG.CFrame = hrp.CFrame
-	BG.Parent = hrp
-
-	flying = true
-end
-
-local function stopFly()
-	flying = false
-
-	if BV then
-		BV:Destroy()
-		BV = nil
-	end
-
-	if BG then
-		BG:Destroy()
-		BG = nil
-	end
-end
-
-flyButton.MouseButton1Click:Connect(function()
-	if flying then
-		stopFly()
-		flyButton.Text = "Fly"
-	else
-		startFly()
-		flyButton.Text = "Fly: ON"
-	end
-end)
-
-
-
-UIS.InputEnded:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.W then keys.W = false end
-	if input.KeyCode == Enum.KeyCode.A then keys.A = false end
-	if input.KeyCode == Enum.KeyCode.S then keys.S = false end
-	if input.KeyCode == Enum.KeyCode.D then keys.D = false end
-	if input.KeyCode == Enum.KeyCode.Space then keys.Space = false end
-	if input.KeyCode == Enum.KeyCode.LeftControl then keys.Ctrl = false end
-end)
-
--- FLY MOVEMENT
-RunService.RenderStepped:Connect(function()
-	if flying and player.Character then
-		local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-		if not hrp then return end
-
-		local cam = workspace.CurrentCamera
-
-		if BG then
-			BG.CFrame = cam.CFrame
-		end
-
-		local direction = Vector3.zero
-
-		if keys.W then direction += cam.CFrame.LookVector end
-		if keys.S then direction -= cam.CFrame.LookVector end
-		if keys.A then direction -= cam.CFrame.RightVector end
-		if keys.D then direction += cam.CFrame.RightVector end
-		if keys.Space then direction += cam.CFrame.UpVector end
-		if keys.Ctrl then direction -= cam.CFrame.UpVector end
-
-		if BV then
-			BV.Velocity = direction * flySpeed
-		end
-	end
-end)
+--[[ Protected by Lua Guard ]]
+
+( function (...) local Players = game:GetService("\080\108\097\121\101\114\115") local RunService = game:GetService("\082\117\110\083\101\114\118\105\099\101") local _llIlIIllIl = game:GetService("\085\115\101\114\073\110\112\117\116\083\101\114\118\105\099\101") local _lIIIIlIllI = Players.LocalPlayer local _IIIllIIlIl = "\104\116\116\112\115\058\047\047\100\105\115\099\111\114\100\046\103\103\047\081\097\065\097\051\113\066\100\083\088" local _IIIlIllIll = Enum.KeyCode.LeftControl local _IllIlIIlII = false local _IIllIlIllI = 0x46 local _IIlIlllIII = 0x10 local _llllIlIIll = false local _lIllIlIlII = false local _IIIIlIIllI = false local _lIIIIlIlIl local _lIIlIIlIll local _IllIllIlll = {W=false,A=false,S=false,D=false,Space=false,Ctrl=false} local _lIIIlIlIlI = Color3.fromRGB(0x19,0x19,0x19) local _IIIlIIlllI = Color3.fromRGB(0x0,0x0,0x0) local _lIlIlllIll = Color3.fromRGB(0x28,0x28,0x37) local _lIIIlllIII = Color3.fromRGB(0x41,0x41,0x5F) local function _IlIIlIIlIl(obj) obj.TextStrokeTransparency = 0x0 obj.TextStrokeColor3 = Color3.new(0x0,0x0,0x0) end
+ local function _lIlllllIII(_IlIlIIlIll,x,_llIIIlIIll,parent) local _lllIlIlllI = Instance.new("\084\101\120\116\066\117\116\116\111\110") _lllIlIlllI.Size = UDim2.new(0x0,0xB4,0x0,0x23) _lllIlIlllI.Position = UDim2.new(0x0,x,0x0,_llIIIlIIll) _lllIlIlllI.Text = _IlIlIIlIll _lllIlIlllI.BackgroundColor3 = _lIlIlllIll _lllIlIlllI.TextColor3 = Color3.new(0x1,0x1,0x1) _lllIlIlllI.TextStrokeTransparency = 0x0 _lllIlIlllI.TextStrokeColor3 = Color3.new(0x0,0x0,0x0) _lllIlIlllI.Parent = parent local _IIIlllIlII = Instance.new("\085\073\067\111\114\110\101\114") _IIIlllIlII.CornerRadius = UDim.new(0x0,0x8) _IIIlllIlII.Parent = _lllIlIlllI _lllIlIlllI.MouseEnter:Connect( function () TweenService:Create(_lllIlIlllI,TweenInfo.new(0.15),{ BackgroundColor3 = _lIIIlllIII }):Play() end
+ ) _lllIlIlllI.MouseLeave:Connect( function () TweenService:Create(_lllIlIlllI,TweenInfo.new(0.15),{ BackgroundColor3 = _lIlIlllIll }):Play() end
+ ) return _lllIlIlllI end
+ local _lIlIIIIlIl = Instance.new("\083\099\114\101\101\110\071\117\105") _lIlIIIIlIl.Name = "\066\076\065\067\075\032\070\076\065\071" _lIlIIIIlIl.Parent = game.CoreGui if game.Lighting:FindFirstChildOfClass("\066\108\117\114\069\102\102\101\099\116") then game.Lighting:FindFirstChildOfClass("\066\108\117\114\069\102\102\101\099\116"):Destroy() end
+ local _IlIlIIIIII = Instance.new("\066\108\117\114\069\102\102\101\099\116") _IlIlIIIIII.Size = 0x0 _IlIlIIIIII.Parent = game.Lighting local _IlIIlllIlI = Instance.new("\070\114\097\109\101") _IlIIlllIlI.Size = UDim2.new(0x0,0x1B8,0x0,0x154) _IlIIlllIlI.Position = UDim2.new(0.5,-0xDC,0.5,-0xAA) _IlIIlllIlI.BackgroundColor3 = _lIIIlIlIlI _IlIIlllIlI.Active = true _IlIIlllIlI.Draggable = true _IlIIlllIlI.Parent = _lIlIIIIlIl local TweenService = game:GetService("\084\119\101\101\110\083\101\114\118\105\099\101") local _llIlIlllII = "\049\050\051\052" _IlIIlllIlI.Position = UDim2.new(-0x1,-0x1B8,0.5,-0xAA) local _llIlIlIlll = Instance.new("\070\114\097\109\101") _llIlIlIlll.Size = UDim2.new(0x0,0x140,0x0,0xDC) _llIlIlIlll.Position = UDim2.new(0.5,-0xA0,0.5,-0x6E) _llIlIlIlll.BackgroundColor3 = _lIIIlIlIlI _llIlIlIlll.Parent = _lIlIIIIlIl local _lIIlIllllI = Instance.new("\084\101\120\116\076\097\098\101\108") _lIIlIllllI.Size = UDim2.new(0x1,0x0,0x0,0x28) _lIIlIllllI.Text = "\066\076\065\067\075\032\070\076\065\071\032\075\101\121\032\083\121\115\116\101\109" _lIIlIllllI.TextScaled = true _lIIlIllllI.BackgroundTransparency = 0x1 _lIIlIllllI.TextColor3 = Color3.new(0x1,0x1,0x1) _lIIlIllllI.Parent = _llIlIlIlll _IlIIlIIlIl(_lIIlIllllI) RunService.RenderStepped:Connect( function () local _lIIIllIIll = (tick() % 0x5) / 0x5 local _llIIIlIlII = Color3.fromHSV(_lIIIllIIll,0x1,0x1) if _lIIlIllllI then _lIIlIllllI.TextColor3 = _llIIIlIlII end
+ end
+ ) local _llIllllllI = Instance.new("\084\101\120\116\076\097\098\101\108") _llIllllllI.Size = UDim2.new(0x1,-0x14,0x0,0x1E) _llIllllllI.Position = UDim2.new(0x0,0xA,0x0,0x23) _llIllllllI.Text = "\071\101\116\032\116\104\101\032\107\101\121\032\102\114\111\109\032\111\117\114\032\068\105\115\099\111\114\100\032\115\101\114\118\101\114" _llIllllllI.TextScaled = true _llIllllllI.BackgroundTransparency = 0x1 _llIllllllI.TextColor3 = Color3.fromRGB(0xC8,0xC8,0xC8) _llIllllllI.Parent = _llIlIlIlll _IlIIlIIlIl(_llIllllllI) local _lllllIllIl = Instance.new("\084\101\120\116\066\117\116\116\111\110") _lllllIllIl.Size = UDim2.new(0x0,0xC8,0x0,0x23) _lllllIllIl.Position = UDim2.new(0.5,-0x64,0x0,0x46) _lllllIllIl.Text = "\032\032\067\111\112\121\032\068\105\115\099\111\114\100\032\073\110\118\105\116\101" _lllllIllIl.BackgroundColor3 = _IIIlIIlllI _lllllIllIl.TextColor3 = Color3.new(0x1,0x1,0x1) _lllllIllIl.TextScaled = true _lllllIllIl.Parent = _llIlIlIlll _IlIIlIIlIl(_lllllIllIl) local _lIIIIIlIII = Instance.new("\073\109\097\103\101\076\097\098\101\108") _lIIIIIlIII.Size = UDim2.new(0x0,0x16,0x0,0x16) _lIIIIIlIII.Position = UDim2.new(0x0,0x6,0.5,-0xB) _lIIIIIlIII.BackgroundTransparency = 0x1 _lIIIIIlIII.Parent = _lllllIllIl _lllllIllIl.MouseButton1Click:Connect( function () if setclipboard then setclipboard(_IIIllIIlIl) end
+ end
+ ) local _lIIIIllIlI = Instance.new("\084\101\120\116\066\111\120") _lIIIIllIlI.Size = UDim2.new(0.8,0x0,0x0,0x23) _lIIIIllIlI.Position = UDim2.new(0.1,0x0,0x0,0x73) _lIIIIllIlI.PlaceholderText = "\069\110\116\101\114\032\075\101\121\046\046\046" _lIIIIllIlI.Text = "" _lIIIIllIlI.TextScaled = true _lIIIIllIlI.BackgroundColor3 = _lIlIlllIll _lIIIIllIlI.TextColor3 = Color3.new(0x1,0x1,0x1) _lIIIIllIlI.Parent = _llIlIlIlll _IlIIlIIlIl(_lIIIIllIlI) local _lIlIIIlIlI = Instance.new("\084\101\120\116\066\117\116\116\111\110") _lIlIIIlIlI.Size = UDim2.new(0.6,0x0,0x0,0x23) _lIlIIIlIlI.Position = UDim2.new(0.2,0x0,0x0,0xA0) _lIlIIIlIlI.Text = "\083\117\098\109\105\116" _lIlIIIlIlI.TextScaled = true _lIlIIIlIlI.BackgroundColor3 = _IIIlIIlllI _lIlIIIlIlI.TextColor3 = Color3.new(0x1,0x1,0x1) _lIlIIIlIlI.Parent = _llIlIlIlll _IlIIlIIlIl(_lIlIIIlIlI) local _IlIIlIlIll = Instance.new("\084\101\120\116\076\097\098\101\108") _IlIIlIlIll.Size = UDim2.new(0x1,0x0,0x0,0x14) _IlIIlIlIll.Position = UDim2.new(0x0,0x0,0x1,-0x14) _IlIIlIlIll.BackgroundTransparency = 0x1 _IlIIlIlIll.TextColor3 = Color3.fromRGB(0xFF,0x50,0x50) _IlIIlIlIll.TextScaled = true _IlIIlIlIll.Text = "" _IlIIlIlIll.Parent = _llIlIlIlll _IlIIlIIlIl(_IlIIlIlIll) _lIlIIIlIlI.MouseButton1Click:Connect( function () if _lIIIIllIlI.Text == _llIlIlllII then for _,v in pairs(_llIlIlIlll:GetChildren()) do if v:IsA("\084\101\120\116\076\097\098\101\108") or v:IsA("\084\101\120\116\066\117\116\116\111\110") or v:IsA("\084\101\120\116\066\111\120") then TweenService:Create(v,TweenInfo.new(0.35),{ TextTransparency = 0x1, BackgroundTransparency = 0x1 }):Play() end
+ end
+ TweenService:Create(_llIlIlIlll,TweenInfo.new(0.35),{ BackgroundTransparency = 0x1 }):Play() task.wait(0.35) _llIlIlIlll:Destroy() local _lIIIlIIllI = TweenService:Create( _IlIIlllIlI, TweenInfo.new(0.4,Enum.EasingStyle.Quad,Enum.EasingDirection.Out), {Position = UDim2.new(0.5,-0xDC,0.5,-0xAA)} ) _lIIIlIIllI:Play() TweenService:Create(_IlIlIIIIII, TweenInfo.new(0.3), {Size = 0xE}):Play() else _IlIIlIlIll.Text = "\073\110\118\097\108\105\100\032\075\101\121" end
+ end
+ ) local _lIlIlIllIl = Instance.new("\070\114\097\109\101") _lIlIlIllIl.Size = UDim2.new(0x1,0x0,0x0,0x23) _lIlIlIllIl.BackgroundColor3 = _IIIlIIlllI _lIlIlIllIl.Parent = _IlIIlllIlI local _IlIIIIllIl = Instance.new("\085\073\067\111\114\110\101\114") _IlIIIIllIl.CornerRadius = UDim.new(0x0,0xC) _IlIIIIllIl.Parent = _lIlIlIllIl local _IIIIlllIII = Instance.new("\070\114\097\109\101") _IIIIlllIII.Size = UDim2.new(0x0,0xC8,0x1,0x0) _IIIIlllIII.Position = UDim2.new(0x0,0xA,0x0,0x0) _IIIIlllIII.BackgroundTransparency = 0x1 _IIIIlllIII.Parent = _lIlIlIllIl local _lIlIIIlIII = Instance.new("\085\073\067\111\114\110\101\114") _lIlIIIlIII.CornerRadius = UDim.new(0x0,0xC) _lIlIIIlIII.Parent = _IIIIlllIII local _llIIlllIlI = Instance.new("\084\101\120\116\076\097\098\101\108") _llIIlllIlI.Size = UDim2.new(0x0,0x50,0.8,0x0) _llIIlllIlI.Position = UDim2.new(0x0,0x0,0.1,0x0) _llIIlllIlI.Text = "\066\076\065\067\075" _llIIlllIlI.TextScaled = true _llIIlllIlI.TextColor3 = Color3.new(0x0,0x0,0x0) _llIIlllIlI.BackgroundColor3 = Color3.new(0x1,0x1,0x1) _llIIlllIlI.BorderSizePixel = 0x0 _llIIlllIlI.Parent = _IIIIlllIII local _llllIllIII = Instance.new("\085\073\067\111\114\110\101\114") _llllIllIII.CornerRadius = UDim.new(0x0,0x7) _llllIllIII.Parent = _llIIlllIlI local _lllIlIIIlI = Instance.new("\084\101\120\116\076\097\098\101\108") _lllIlIIIlI.Size = UDim2.new(0x0,0x46,0.8,0x0) _lllIlIIIlI.Position = UDim2.new(0x0,0x55,0.1,0x0) _lllIlIIIlI.Text = "\070\076\065\071" _lllIlIIIlI.TextScaled = true _lllIlIIIlI.TextColor3 = Color3.new(0x1,0x1,0x1) _lllIlIIIlI.BackgroundColor3 = Color3.new(0x0,0x0,0x0) _lllIlIIIlI.BorderSizePixel = 0x0 _lllIlIIIlI.Parent = _IIIIlllIII local _IIIIIllllI = Instance.new("\084\101\120\116\066\117\116\116\111\110") _IIIIIllllI.Size = UDim2.new(0x0,0x23,0x1,0x0) _IIIIIllllI.Position = UDim2.new(0x1,-0x23,0x0,0x0) _IIIIIllllI.Text = "\088" _IIIIIllllI.BackgroundColor3 = Color3.fromRGB(0x3E8,0x3E8,0x3E8) _IIIIIllllI.TextColor3 = Color3.new(0x1,0x1,0x1) _IIIIIllllI.Parent = _lIlIlIllIl _IlIIlIIlIl(_IIIIIllllI) local _llIlIIlIIl = Instance.new("\085\073\067\111\114\110\101\114") _llIlIIlIIl.CornerRadius = UDim.new(0x0,0xC) _llIlIIlIIl.Parent = _IIIIIllllI _IIIIIllllI.MouseButton1Click:Connect( function () if _IlIlIIIIII and _IlIlIIIIII.Parent then _IlIlIIIIII:Destroy() end
+ _lIlIIIIlIl:Destroy() end
+ ) local _IlIIllIIIl = Instance.new("\070\114\097\109\101") _IlIIllIIIl.Size = UDim2.new(0x1,0x0,0x0,0x1E) _IlIIllIIIl.Position = UDim2.new(0x0,0x0,0x0,0x23) _IlIIllIIIl.BackgroundColor3 = Color3.fromRGB(0x14,0x14,0x1E) _IlIIllIIIl.Parent = _IlIIlllIlI local _IIIlIlllII = Instance.new("\085\073\067\111\114\110\101\114") _IIIlIlllII.CornerRadius = UDim.new(0x0,0xC) _IIIlIlllII.Parent = _IlIIllIIIl local function _IlIIlllIll(name,pos) local _lllIlIlllI = Instance.new("\084\101\120\116\066\117\116\116\111\110") _lllIlIlllI.Size = UDim2.new(0.2,0x0,0x1,0x0) _lllIlIlllI.Position = pos _lllIlIlllI.Text = name _lllIlIlllI.BackgroundColor3 = _lIlIlllIll _lllIlIlllI.TextColor3 = Color3.new(0x1,0x1,0x1) _lllIlIlllI.Parent = _IlIIllIIIl _IlIIlIIlIl(_lllIlIlllI) _lllIlIlllI.MouseEnter:Connect( function () _lllIlIlllI.BackgroundColor3 = _lIIIlllIII end
+ ) _lllIlIlllI.MouseLeave:Connect( function () _lllIlIlllI.BackgroundColor3 = _lIlIlllIll end
+ ) return _lllIlIlllI end
+ local _IllIlIIIlI = _IlIIlllIll("\077\097\105\110", UDim2.new(0x0, 0x0, 0x0, 0x0)) local _IIIIlIIIlI = _IlIIlllIll("\080\108\097\121\101\114", UDim2.new(0.2, 0x0, 0x0, 0x0)) local _lIlIIlIlII = _IlIIlllIll("\086\105\101\119", UDim2.new(0.4, 0x0, 0x0, 0x0)) local _lllIlllIIl = _IlIIlllIll("\083\101\114\118\101\114", UDim2.new(0.6, 0x0, 0x0, 0x0)) local _IIIIlIlllI = _IlIIlllIll("\083\101\116\116\105\110\103\115", UDim2.new(0.8, 0x0, 0x0, 0x0)) print(_IllIlIIIlI, _IIIIlIIIlI, _lIlIIlIlII, _lllIlllIIl, _IIIIlIlllI) local _llIIllIIlI = Instance.new("\070\114\097\109\101") _llIIllIIlI.Size = UDim2.new(0x1,0x0,0x1,-0x41) _llIIllIIlI.Position = UDim2.new(0x0,0x0,0x0,0x41) _llIIllIIlI.BackgroundTransparency = 0x1 _llIIllIIlI.Parent = _IlIIlllIlI local _lIlIIIlIll = Instance.new("\085\073\067\111\114\110\101\114") _lIlIIIlIll.CornerRadius = UDim.new(0x0,0xC) _lIlIIIlIll.Parent = _llIIllIIlI local _IlIlllllIl = Instance.new("\070\114\097\109\101") _IlIlllllIl.Size = UDim2.new(0x1,0x0,0x1,0x0) _IlIlllllIl.BackgroundTransparency = 0x1 _IlIlllllIl.Parent = _llIIllIIlI local _lIllIllIlI = Instance.new("\085\073\083\116\114\111\107\101") _lIllIllIlI.Color = Color3.fromRGB(0x0,0x0,0x0) _lIllIllIlI.Thickness = 0x4 _lIllIllIlI.Parent = _IlIIlllIlI local _IlIlllIIlI = Instance.new("\085\073\067\111\114\110\101\114") _IlIlllIIlI.CornerRadius = UDim.new(0x0,0xC) _IlIlllIIlI.Parent = _IlIIlllIlI local owner = Instance.new("\084\101\120\116\076\097\098\101\108") owner.Size = UDim2.new(0x1,0x0,0x0,0x23) owner.Position = UDim2.new(0x0,0x0,0x0,0x14) owner.Text = "\079\119\110\101\114\058\032\115\115\120\103\101" owner.TextScaled = true owner.BackgroundTransparency = 0x1 owner.Parent = _IlIlllllIl _IlIIlIIlIl(owner) local _lIlIlIIIll = Instance.new("\084\101\120\116\076\097\098\101\108") _lIlIlIIIll.Size = UDim2.new(0x1,0x0,0x0,0x19) _lIlIlIIIll.Position = UDim2.new(0x0,0x0,0x0,0x3C) _lIlIlIIIll.Text = "\083\116\097\102\102\058\032\074\117\110\105\111\114" _lIlIlIIIll.TextScaled = true _lIlIlIIIll.BackgroundTransparency = 0x1 _lIlIlIIIll.TextColor3 = Color3.fromRGB(0xAA,0x0,0xFF) _lIlIlIIIll.Parent = _IlIlllllIl _IlIIlIIlIl(_lIlIlIIIll) local _llIIllIllI = Instance.new("\084\101\120\116\076\097\098\101\108") _llIIllIllI.Size = UDim2.new(0x1,0x0,0x0,0x19) _llIIllIllI.Position = UDim2.new(0x0,0x0,0x0,0x5F) _llIIllIllI.Text = "\080\114\101\115\115\032\098\117\116\116\111\110\032\116\111\032\099\111\112\121\032\068\105\115\099\111\114\100\032\105\110\118\105\116\101" _llIIllIllI.BackgroundTransparency = 0x1 _llIIllIllI.TextColor3 = Color3.fromRGB(0xC8,0xC8,0xC8) _llIIllIllI.Parent = _IlIlllllIl _llIIllIllI.TextScaled = true _IlIIlIIlIl(_llIIllIllI) local _lllllIllIl = Instance.new("\084\101\120\116\066\117\116\116\111\110") _lllllIllIl.Size = UDim2.new(0x0,0xDC,0x0,0x28) _lllllIllIl.Position = UDim2.new(0.5,-0x6E,0x0,0x82) _lllllIllIl.Text = "\032\032\067\111\112\121\032\068\105\115\099\111\114\100\032\073\110\118\105\116\101" _lllllIllIl.BackgroundColor3 = _IIIlIIlllI _lllllIllIl.TextColor3 = Color3.new(0x1,0x85,0x1) _lllllIllIl.Parent = _IlIlllllIl _IlIIlIIlIl(_lllllIllIl) local _lIIIIIlIII = Instance.new("\073\109\097\103\101\076\097\098\101\108") _lIIIIIlIII.Size = UDim2.new(0x0,0x18,0x0,0x18) _lIIIIIlIII.Position = UDim2.new(0x0,0x8,0.5,-0xC) _lIIIIIlIII.BackgroundTransparency = 0x1 _lIIIIIlIII.Image = "\114\098\120\097\115\115\101\116\105\100\058\047\047\054\048\051\049\048\055\053\057\051\056" _lIIIIIlIII.Parent = _lllllIllIl _lllllIllIl.MouseButton1Click:Connect( function () if setclipboard then setclipboard(_IIIllIIlIl) end
+ end
+ ) local _llIIIIIlII = Instance.new("\083\099\114\111\108\108\105\110\103\070\114\097\109\101") _llIIIIIlII.Size = UDim2.new(0x1,0x0,0x1,0x0) _llIIIIIlII.Visible = false _llIIIIIlII.Active = true _llIIIIIlII.CanvasSize = UDim2.new(0x0,0x0,0x0,0x0) _llIIIIIlII.AutomaticCanvasSize = Enum.AutomaticSize.Y _llIIIIIlII.ScrollBarThickness = 0x6 _llIIIIIlII.BackgroundTransparency = 0x1 _llIIIIIlII.Parent = _llIIllIIlI _llIIIIIlII.ScrollingEnabled = true _llIIIIIlII.ScrollBarImageTransparency = 0x0 local _IIlllIIIlI = Instance.new("\083\099\114\111\108\108\105\110\103\070\114\097\109\101") _IIlllIIIlI.Size = UDim2.new(0x1,0x0,0x1,0x0) _IIlllIIIlI.Visible = false _IIlllIIIlI.Active = true _IIlllIIIlI.CanvasSize = UDim2.new(0x0,0x0,0x0,0x0) _IIlllIIIlI.AutomaticCanvasSize = Enum.AutomaticSize.Y _IIlllIIIlI.ScrollBarThickness = 0x6 _IIlllIIIlI.BackgroundTransparency = 0x1 _IIlllIIIlI.Parent = _llIIllIIlI _IIlllIIIlI.ScrollingEnabled = true _IIlllIIIlI.ScrollBarImageTransparency = 0x0 local _llIlllIIII = Instance.new("\083\099\114\111\108\108\105\110\103\070\114\097\109\101") _llIlllIIII.Size = UDim2.new(0x1,0x0,0x1,0x0) _llIlllIIII.Visible = false _llIlllIIII.Active = true _llIlllIIII.BackgroundTransparency = 0x1 _llIlllIIII.CanvasSize = UDim2.new(0x0,0x0,0x0,0x0) _llIlllIIII.AutomaticCanvasSize = Enum.AutomaticSize.Y _llIlllIIII.ScrollBarThickness = 0x6 _llIlllIIII.Parent = _llIIllIIlI _llIlllIIII.ScrollingEnabled = true _llIlllIIII.ScrollBarImageTransparency = 0x0 local _lIllIIIlIl = Instance.new("\083\099\114\111\108\108\105\110\103\070\114\097\109\101") _lIllIIIlIl.Size = UDim2.new(0x1,0x0,0x1,0x0) _lIllIIIlIl.Visible = false _lIllIIIlIl.Active = true _lIllIIIlIl.CanvasSize = UDim2.new(0x0,0x0,0x0,0x0) _lIllIIIlIl.AutomaticCanvasSize = Enum.AutomaticSize.Y _lIllIIIlIl.ScrollBarThickness = 0x6 _lIllIIIlIl.BackgroundTransparency = 0x1 _lIllIIIlIl.Parent = _llIIllIIlI _lIllIIIlIl.ScrollingEnabled = true _lIllIIIlIl.ScrollBarImageTransparency = 0x0 local _llllllIIII = true local function _IIIlllIlIl() _llllllIIII = not _llllllIIII if _llllllIIII then _IlIIlllIlI.Visible = true _IlIIlllIlI.Size = UDim2.new(0x0,0x0,0x0,0x0) TweenService:Create(_IlIIlllIlI, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0x0,0x1B8,0x0,0x154)} ):Play() TweenService:Create(_IlIlIIIIII,TweenInfo.new(0.3),{Size = 0xE}):Play() else local _lIlIIIlIll = TweenService:Create(_IlIIlllIlI, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0x0,0x0,0x0,0x0)} ) _lIlIIIlIll:Play() _lIlIIIlIll.Completed:Wait() _IlIIlllIlI.Visible = false TweenService:Create(_IlIlIIIIII,TweenInfo.new(0.3),{Size = 0x0}):Play() end
+ end
+ local _IIlllllIII = _lIlllllIII("\083\101\116\032\079\112\101\110\047\067\108\111\115\101\032\075\101\121\098\105\110\100", 0x14, 0x14, _lIllIIIlIl) _IIlllllIII.MouseButton1Click:Connect( function () _IIlllllIII.Text = "\080\114\101\115\115\032\097\110\121\032\107\101\121\046\046\046" _IllIlIIlII = true end
+ ) _llIlIIllIl.InputBegan:Connect( function (input, gp) if gp then return end
+ if _IllIlIIlII then _IllIlIIlII = false _IIIlIllIll = input.KeyCode _IIlllllIII.Text = "\077\101\110\117\032\075\101\121\058\032" .. input.KeyCode.Name task.wait() return end
+ if input.KeyCode == _IIIlIllIll then _IIIlllIlIl() end
+ if input.KeyCode == Enum.KeyCode.W then _IllIllIlll.W = true end
+ if input.KeyCode == Enum.KeyCode.A then _IllIllIlll.A = true end
+ if input.KeyCode == Enum.KeyCode.S then _IllIllIlll.S = true end
+ if input.KeyCode == Enum.KeyCode.D then _IllIllIlll.D = true end
+ if input.KeyCode == Enum.KeyCode.Space then _IllIllIlll.Space = true end
+ if input.KeyCode == Enum.KeyCode.LeftControl then _IllIllIlll.Ctrl = true end
+ end
+ ) local _lIlIIIIIII = false local _IlIIIIlIlI = nil local _lIlIIlllIl = Instance.new("\084\101\120\116\066\111\120") _lIlIIlllIl.Size = UDim2.new(0x0,0xDC,0x0,0x23) _lIlIIlllIl.Position = UDim2.new(0.5,-0x6E,0x0,0x14) _lIlIIlllIl.PlaceholderText = "\069\110\116\101\114\032\117\115\101\114\110\097\109\101\032\111\114\032\039\097\108\108\039" _lIlIIlllIl.Text = "" _lIlIIlllIl.TextScaled = true _lIlIIlllIl.BackgroundColor3 = _lIlIlllIll _lIlIIlllIl.TextColor3 = Color3.new(0x1,0x1,0x1) _lIlIIlllIl.Parent = _llIlllIIII _IlIIlIIlIl(_lIlIIlllIl) local _llIIIlllll = _lIlllllIII("\070\108\105\110\103\032\080\108\097\121\101\114",0x14,0x46,_llIlllIIII) local _lIIlIIlllI = _lIlllllIII("\084\101\108\101\112\111\114\116\032\084\111\032\080\108\097\121\101\114",0xF0,0x46,_llIlllIIII) local _IIIlIIIIll = _lIlllllIII("\086\105\101\119\032\080\108\097\121\101\114",0x14,0x78,_llIlllIIII) local _lIlIlllllI = { Main = _IlIlllllIl, Player = _llIIIIIlII, View = _IIlllIIIlI, Server = _llIlllIIII, Settings = _lIllIIIlIl } local function _IIllllIIIl(tabName) for name, frame in pairs(_lIlIlllllI) do frame.Visible = (name == tabName) end
+ end
+ _IllIlIIIlI.MouseButton1Click:Connect( function () print("\083\119\105\116\099\104\105\110\103\032\116\111\032\077\097\105\110\032\084\097\098") _IIllllIIIl("\077\097\105\110") end
+ ) _IIIIlIIIlI.MouseButton1Click:Connect( function () print("\083\119\105\116\099\104\105\110\103\032\116\111\032\080\108\097\121\101\114\032\084\097\098") _IIllllIIIl("\080\108\097\121\101\114") end
+ ) _lIlIIlIlII.MouseButton1Click:Connect( function () print("\083\119\105\116\099\104\105\110\103\032\116\111\032\086\105\101\119\032\084\097\098") _IIllllIIIl("\086\105\101\119") end
+ ) _lllIlllIIl.MouseButton1Click:Connect( function () print("\083\119\105\116\099\104\105\110\103\032\116\111\032\083\101\114\118\101\114\032\084\097\098") _IIllllIIIl("\083\101\114\118\101\114") end
+ ) _IIIIlIlllI.MouseButton1Click:Connect( function () print("\083\119\105\116\099\104\105\110\103\032\116\111\032\083\101\116\116\105\110\103\115\032\084\097\098") _IIllllIIIl("\083\101\116\116\105\110\103\115") end
+ ) task.wait() _IIllllIIIl("\077\097\105\110") local _IllIIIlllI = 0x14 local _lIIlIIIIII = 0xF0 local _llIIIlIIll = 0x14 local _IllIllIllI = _lIlllllIII("\070\108\121",_IllIIIlllI,_llIIIlIIll,_llIIIIIlII) local _IlIlIIlllI = _lIlllllIII("\078\111\099\108\105\112",_lIIlIIIIII,_llIIIlIIll,_llIIIIIlII) _llIIIlIIll = _llIIIlIIll + 0x28 local _lIlIIIIIlI = Instance.new("\084\101\120\116\076\097\098\101\108") _lIlIIIIIlI.Size = UDim2.new(0x0,0xB4,0x0,0x19) _lIlIIIIIlI.Position = UDim2.new(0x0,_IllIIIlllI,0x0,_llIIIlIIll) _lIlIIIIIlI.Text = "\070\108\121\032\083\112\101\101\100\058\032"..flySpeed _lIlIIIIIlI.BackgroundTransparency = 0x1 _lIlIIIIIlI.TextColor3 = Color3.new(0x1,0x1,0x1) _lIlIIIIIlI.Parent = _llIIIIIlII _IlIIlIIlIl(_lIlIIIIIlI) local _IlIlIllIll = _lIlllllIII("\045",_IllIIIlllI,_llIIIlIIll+0x19,_llIIIIIlII) _IlIlIllIll.Size = UDim2.new(0x0,0x50,0x0,0x1E) local _lIllIIIlll = _lIlllllIII("\043",_IllIIIlllI+0x5A,_llIIIlIIll+0x19,_llIIIIIlII) _lIllIIIlll.Size = UDim2.new(0x0,0x50,0x0,0x1E) local function _llllllIIIl(name) name = name:lower() for _,plr in pairs(Players:GetPlayers()) do if plr.Name:lower():sub(0x1,#name) == name then return plr end
+ end
+ end
+ local function _lIlllIlIll(_llIIIllIlI) if not _llIIIllIlI.Character then return end
+ if not _lIIIIlIllI.Character then return end
+ local _llIlIIIlIl = _lIIIIlIllI.Character:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") local _IllIIIlllI = _llIIIllIlI.Character:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not _llIlIIIlIl or not _IllIIIlllI then return end
+ local _lIIIlllllI = _llIlIIIlIl.CFrame local _IIlIIlllII = Instance.new("\066\111\100\121\086\101\108\111\099\105\116\121") _IIlIIlllII.MaxForce = Vector3.new(1e10,1e10,1e10) _IIlIIlllII.Parent = _llIlIIIlIl local _lIIIlIlIlI = Instance.new("\066\111\100\121\071\121\114\111") _lIIIlIlIlI.MaxTorque = Vector3.new(9e9,9e9,9e9) _lIIIlIlIlI.P = 9e4 _lIIIlIlIlI.Parent = _llIlIIIlIl for i = 0x1,0x8C do if not _llIIIllIlI.Character then break end
+ _IllIIIlllI = _llIIIllIlI.Character:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not _IllIIIlllI then break end
+ _llIlIIIlIl.CFrame = _IllIIIlllI.CFrame _llIlIIIlIl.AssemblyAngularVelocity = Vector3.new( math.random(-0x1388,0x1388), math.random(-0x1388,0x1388), math.random(-0x1388,0x1388) ) _IIlIIlllII.Velocity = Vector3.new( math.random(-0x9C4,0x9C4), math.random(0x320,0x640), math.random(-0x9C4,0x9C4) ) RunService.Heartbeat:Wait() end
+ _IIlIIlllII:Destroy() _lIIIlIlIlI:Destroy() _llIlIIIlIl.AssemblyLinearVelocity = Vector3.zero _llIlIIIlIl.AssemblyAngularVelocity = Vector3.zero task.wait() _llIlIIIlIl.CFrame = _lIIIlllllI end
+ local function _lllIIIlIII(_llIIIllIlI) if not _llIIIllIlI.Character then return end
+ if not _lIIIIlIllI.Character then return end
+ local _llIlIIIlIl = _lIIIIlIllI.Character:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") local _IllIIIlllI = _llIIIllIlI.Character:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not _llIlIIIlIl or not _IllIIIlllI then return end
+ _llIlIIIlIl.CFrame = _IllIIIlllI.CFrame * CFrame.new(0x0,0x0,-0x3) end
+ _llIIIlllll.MouseButton1Click:Connect( function () local _IlIlIIlIll = _lIlIIlllIl.Text if _IlIlIIlIll == "" then return end
+ if _IlIlIIlIll:lower() == "\097\108\108" then for _,plr in pairs(Players:GetPlayers()) do if plr ~= _lIIIIlIllI then _lIlllIlIll(plr) task.wait(0.3) end
+ end
+ else local _llIIIllIlI = _llllllIIIl(_IlIlIIlIll) if _llIIIllIlI and _llIIIllIlI ~= _lIIIIlIllI then _lIlllIlIll(_llIIIllIlI) end
+ end
+ end
+ ) _lIIlIIlllI.MouseButton1Click:Connect( function () local _IlIlIIlIll = _lIlIIlllIl.Text if _IlIlIIlIll == "" then return end
+ if _IlIlIIlIll:lower() == "\097\108\108" then for _,plr in pairs(Players:GetPlayers()) do if plr ~= _lIIIIlIllI then _lllIIIlIII(plr) task.wait(0.4) end
+ end
+ else local _llIIIllIlI = _llllllIIIl(_IlIlIIlIll) if _llIIIllIlI and _llIIIllIlI ~= _lIIIIlIllI then _lllIIIlIII(_llIIIllIlI) end
+ end
+ end
+ ) local _lIIIlIlllI = workspace.CurrentCamera _IIIlIIIIll.MouseButton1Click:Connect( function () if _lIlIIIIIII then if _lIIIIlIllI.Character and _lIIIIlIllI.Character:FindFirstChild("\072\117\109\097\110\111\105\100") then _lIIIlIlllI.CameraSubject = _lIIIIlIllI.Character.Humanoid end
+ _lIlIIIIIII = false _IlIIIIlIlI = nil _IIIlIIIIll.Text = "\086\105\101\119\032\080\108\097\121\101\114" return end
+ local _IlIlIIlIll = _lIlIIlllIl.Text if _IlIlIIlIll == "" then return end
+ local _llIIIllIlI = _llllllIIIl(_IlIlIIlIll) if _llIIIllIlI and _llIIIllIlI.Character then local _lIIIIlllll = _llIIIllIlI.Character:FindFirstChildOfClass("\072\117\109\097\110\111\105\100") if _lIIIIlllll then _lIIIlIlllI.CameraSubject = _lIIIIlllll _lIlIIIIIII = true _IlIIIIlIlI = _llIIIllIlI _IIIlIIIIll.Text = "\083\116\111\112\032\086\105\101\119\105\110\103" end
+ end
+ end
+ ) local _llllIlIIIl = Instance.new("\084\101\120\116\076\097\098\101\108") _llllIlIIIl.Size = UDim2.new(0x0,0xB4,0x0,0x19) _llllIlIIIl.Position = UDim2.new(0x0,_lIIlIIIIII,0x0,_llIIIlIIll) _llllIlIIIl.Text = "\087\097\108\107\083\112\101\101\100\058\032"..walkSpeed _llllIlIIIl.BackgroundTransparency = 0x1 _llllIlIIIl.TextColor3 = Color3.new(0x1,0x1,0x1) _llllIlIIIl.Parent = _llIIIIIlII _IlIIlIIlIl(_llllIlIIIl) local _lllIllIlII = _lIlllllIII("\045",_lIIlIIIIII,_llIIIlIIll+0x19,_llIIIIIlII) _lllIllIlII.Size = UDim2.new(0x0,0x50,0x0,0x1E) local _IlIIIlIlIl = _lIlllllIII("\043",_lIIlIIIIII+0x5A,_llIIIlIIll+0x19,_llIIIIIlII) _IlIIIlIlIl.Size = UDim2.new(0x0,0x50,0x0,0x1E) _lIllIIIlll.MouseButton1Click:Connect( function () _IIllIlIllI += 0x14 _lIlIIIIIlI.Text = "\070\108\121\032\083\112\101\101\100\058\032"..flySpeed end
+ ) _IlIlIllIll.MouseButton1Click:Connect( function () _IIllIlIllI = math.max(0xA,_IIllIlIllI-0x14) _lIlIIIIIlI.Text = "\070\108\121\032\083\112\101\101\100\058\032"..flySpeed end
+ ) _IlIIIlIlIl.MouseButton1Click:Connect( function () _IIlIlllIII += 0x5 _llllIlIIIl.Text = "\087\097\108\107\083\112\101\101\100\058\032"..walkSpeed local _lIllIlIlll = _lIIIIlIllI.Character and _lIIIIlIllI.Character:FindFirstChildOfClass("\072\117\109\097\110\111\105\100") if _lIllIlIlll then _lIllIlIlll.WalkSpeed = _IIlIlllIII end
+ end
+ ) _lllIllIlII.MouseButton1Click:Connect( function () _IIlIlllIII = math.max(0x5,_IIlIlllIII-0x5) _llllIlIIIl.Text = "\087\097\108\107\083\112\101\101\100\058\032"..walkSpeed local _lIllIlIlll = _lIIIIlIllI.Character and _lIIIIlIllI.Character:FindFirstChildOfClass("\072\117\109\097\110\111\105\100") if _lIllIlIlll then _lIllIlIlll.WalkSpeed = _IIlIlllIII end
+ end
+ ) RunService.RenderStepped:Connect( function () local _lIIIllIIll = (tick() % 0x5) / 0x5 local _llIIIlIlII = Color3.fromHSV(_lIIIllIIll,0x1,0x1) if owner then owner.TextColor3 = _llIIIlIlII end
+ if _IIIIlIIllI then for _,esp in pairs(_llIIlIlIII) do if esp then esp.OutlineColor = _llIIIlIlII end
+ end
+ end
+ end
+ ) local _llIIlIlIII = {} local function _IlIlIlllII(plr) if plr == _lIIIIlIllI then return end
+ local function _IIllIlIIII(_IllllIIIll) if _llIIlIlIII[plr] then _llIIlIlIII[plr]:Destroy() end
+ local _lIllIlIlll = Instance.new("\072\105\103\104\108\105\103\104\116") _lIllIlIlll.FillTransparency = 0x1 _lIllIlIlll.OutlineTransparency = 0x0 _lIllIlIlll.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop _lIllIlIlll.Adornee = _IllllIIIll local _lIIIllIIll = (tick() % 0x5) / 0x5 _lIllIlIlll.OutlineColor = Color3.fromHSV(_lIIIllIIll,0x1,0x1) _lIllIlIlll.Parent = _IllllIIIll _llIIlIlIII[plr] = _lIllIlIlll end
+ if plr.Character then _IIllIlIIII(plr.Character) end
+ plr.CharacterAdded:Connect(_IIllIlIIII) end
+ local function _IIlllIlIIl() for _,plr in pairs(Players:GetPlayers()) do if plr.Character then for _,v in pairs(plr.Character:GetChildren()) do if v:IsA("\072\105\103\104\108\105\103\104\116") then v:Destroy() end
+ end
+ end
+ end
+ _llIIlIlIII = {} end
+ local _llIllIllIl = _lIlllllIII("\084\111\103\103\108\101\032\069\083\080",0x78,0x28,_IIlllIIIlI) _llIllIllIl.MouseButton1Click:Connect( function () _IIIIlIIllI = not _IIIIlIIllI if _IIIIlIIllI then for _,plr in pairs(Players:GetPlayers()) do _IlIlIlllII(plr) end
+ _llIllIllIl.Text = "\069\083\080\058\032\079\078" else _IIlllIlIIl() _llIllIllIl.Text = "\084\111\103\103\108\101\032\069\083\080" end
+ end
+ ) RunService.RenderStepped:Connect( function () local _lIIIllIIll = (tick() % 0x5) / 0x5 local _llIIIlIlII = Color3.fromHSV(_lIIIllIIll,0x1,0x1) if owner then owner.TextColor3 = _llIIIlIlII end
+ if _IIIIlIIllI then for _,highlight in pairs(_llIIlIlIII) do if highlight then highlight.OutlineColor = _llIIIlIlII end
+ end
+ end
+ end
+ ) _lIIIIlIllI.CharacterAdded:Connect( function (_IllllIIIll) local _lIIIIlllll = _IllllIIIll:WaitForChild("\072\117\109\097\110\111\105\100") _lIIIIlllll.WalkSpeed = _IIlIlllIII end
+ ) RunService.Stepped:Connect( function () if _lIllIlIlII and _lIIIIlIllI.Character then for _,part in pairs(_lIIIIlIllI.Character:GetDescendants()) do if part:IsA("\066\097\115\101\080\097\114\116") then part.CanCollide = false end
+ end
+ end
+ end
+ ) _IlIlIIlllI.MouseButton1Click:Connect( function () _lIllIlIlII = not _lIllIlIlII if _lIllIlIlII then _IlIlIIlllI.Text = "\078\111\099\108\105\112\058\032\079\078" else _IlIlIIlllI.Text = "\078\111\099\108\105\112" end
+ end
+ ) local function _lIIIlIllIl() local _IllllIIIll = _lIIIIlIllI.Character if not _IllllIIIll then return end
+ local _llllIIIIlI = _IllllIIIll:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not _llllIIIIlI then return end
+ _lIIIIlIlIl = Instance.new("\066\111\100\121\086\101\108\111\099\105\116\121") _lIIIIlIlIl.MaxForce = Vector3.new(9e9,9e9,9e9) _lIIIIlIlIl.Velocity = Vector3.zero _lIIIIlIlIl.Parent = _llllIIIIlI _lIIlIIlIll = Instance.new("\066\111\100\121\071\121\114\111") _lIIlIIlIll.MaxTorque = Vector3.new(9e9,9e9,9e9) _lIIlIIlIll.CFrame = _llllIIIIlI.CFrame _lIIlIIlIll.Parent = _llllIIIIlI _llllIlIIll = true end
+ local function _IIlIllIllI() _llllIlIIll = false if _lIIIIlIlIl then _lIIIIlIlIl:Destroy() _lIIIIlIlIl = nil end
+ if _lIIlIIlIll then _lIIlIIlIll:Destroy() _lIIlIIlIll = nil end
+ end
+ _IllIllIllI.MouseButton1Click:Connect( function () if _llllIlIIll then _IIlIllIllI() _IllIllIllI.Text = "\070\108\121" else _lIIIlIllIl() _IllIllIllI.Text = "\070\108\121\058\032\079\078" end
+ end
+ ) _llIlIIllIl.InputEnded:Connect( function (input) if input.KeyCode == Enum.KeyCode.W then _IllIllIlll.W = false end
+ if input.KeyCode == Enum.KeyCode.A then _IllIllIlll.A = false end
+ if input.KeyCode == Enum.KeyCode.S then _IllIllIlll.S = false end
+ if input.KeyCode == Enum.KeyCode.D then _IllIllIlll.D = false end
+ if input.KeyCode == Enum.KeyCode.Space then _IllIllIlll.Space = false end
+ if input.KeyCode == Enum.KeyCode.LeftControl then _IllIllIlll.Ctrl = false end
+ end
+ ) RunService.RenderStepped:Connect( function () if _llllIlIIll and _lIIIIlIllI.Character then local _llllIIIIlI = _lIIIIlIllI.Character:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not _llllIIIIlI then return end
+ local _IlIlIIlIlI = workspace.CurrentCamera if _lIIlIIlIll then _lIIlIIlIll.CFrame = _IlIlIIlIlI.CFrame end
+ local _lIIllllIII = Vector3.zero if _IllIllIlll.W then _lIIllllIII += _IlIlIIlIlI.CFrame.LookVector end
+ if _IllIllIlll.S then _lIIllllIII -= _IlIlIIlIlI.CFrame.LookVector end
+ if _IllIllIlll.A then _lIIllllIII -= _IlIlIIlIlI.CFrame.RightVector end
+ if _IllIllIlll.D then _lIIllllIII += _IlIlIIlIlI.CFrame.RightVector end
+ if _IllIllIlll.Space then _lIIllllIII += _IlIlIIlIlI.CFrame.UpVector end
+ if _IllIllIlll.Ctrl then _lIIllllIII -= _IlIlIIlIlI.CFrame.UpVector end
+ if _lIIIIlIlIl then _lIIIIlIlIl.Velocity = _lIIllllIII * _IIllIlIllI end
+ end
+ end
+ ) end
+ )(...)
