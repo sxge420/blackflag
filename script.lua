@@ -3,7 +3,7 @@
 local Players = game:GetService("\080\108\097\121\101\114\115") local RunService = game:GetService("\082\117\110\083\101\114\118\105\099\101") local UIS = game:GetService("\085\115\101\114\073\110\112\117\116\083\101\114\118\105\099\101") local TweenService = game:GetService("\084\119\101\101\110\083\101\114\118\105\099\101") local player = Players.LocalPlayer local DISCORD_LINK = "\104\116\116\112\115\058\047\047\100\105\115\099\111\114\100\046\103\103\047\081\097\065\097\051\113\066\100\083\088" local function getPlayerFromName(name) name = name:lower() for _,plr in pairs(Players:GetPlayers()) do if plr.Name:lower():sub(0x1,#name) == name then return plr end
  end
  return nil end
- local menuToggleKey = Enum.KeyCode.LeftControl local waitingForKeybind = false local flySpeed = 0x46 local walkSpeed = 0x10 local flying = false local noclip = false local espEnabled = false local hubActive = true local aimEnabled = false local aimFOV = 0x96 local aimSmoothness = 0.15 local antiAfkEnabled = true local BV local BG local keys = {W=false,A=false,S=false,D=false,Space=false,Ctrl=false} local bg = Color3.fromRGB(0x19,0x19,0x19) local accent = Color3.fromRGB(0x0,0x0,0x0) local buttonColor = Color3.fromRGB(0x28,0x28,0x37) local buttonHover = Color3.fromRGB(0x41,0x41,0x5F) local function outlineText(obj) obj.TextStrokeTransparency = 0x0 obj.TextStrokeColor3 = Color3.new(0x0,0x0,0x0) end
+ local menuToggleKey = Enum.KeyCode.LeftControl local waitingForKeybind = false local flySpeed = 0x46 local walkSpeed = 0x10 local flying = false local noclip = false local espEnabled = false local infJump = false local hubActive = true local aimEnabled = false local aimFOV = 0x96 local aimSmoothness = 0.15 local antiAfkEnabled = true local BV local BG local keys = {W=false,A=false,S=false,D=false,Space=false,Ctrl=false} local bg = Color3.fromRGB(0x19,0x19,0x19) local accent = Color3.fromRGB(0x0,0x0,0x0) local buttonColor = Color3.fromRGB(0x28,0x28,0x37) local buttonHover = Color3.fromRGB(0x41,0x41,0x5F) local function outlineText(obj) obj.TextStrokeTransparency = 0x0 obj.TextStrokeColor3 = Color3.new(0x0,0x0,0x0) end
  local function makeButton(text,x,y,parent) local b = Instance.new("\084\101\120\116\066\117\116\116\111\110") b.Size = UDim2.new(0x0,0xB4,0x0,0x23) b.Position = UDim2.new(0x0,x,0x0,y) b.Text = text b.BackgroundColor3 = buttonColor b.TextColor3 = Color3.new(0x1,0x1,0x1) b.TextStrokeTransparency = 0x0 b.TextStrokeColor3 = Color3.new(0x0,0x0,0x0) b.Parent = parent local corner = Instance.new("\085\073\067\111\114\110\101\114") corner.CornerRadius = UDim.new(0x0,0x8) corner.Parent = b b.MouseEnter:Connect( function () TweenService:Create(b,TweenInfo.new(0.15),{ BackgroundColor3 = buttonHover }):Play() end
  ) b.MouseLeave:Connect( function () TweenService:Create(b,TweenInfo.new(0.15),{ BackgroundColor3 = buttonColor }):Play() end
  ) return b end
@@ -30,7 +30,15 @@ local Players = game:GetService("\080\108\097\121\101\114\115") local RunService
  if frozen then freezeButton.Text = "\085\110\102\114\101\101\122\101\032\067\104\097\114\097\099\116\101\114" hrp.Anchored = true hum.WalkSpeed = 0x0 hum.JumpPower = 0x0 else freezeButton.Text = "\070\114\101\101\122\101\032\067\104\097\114\097\099\116\101\114" hrp.Anchored = false hum.WalkSpeed = walkSpeed hum.JumpPower = 0x32 player.CharacterAdded:Connect( function () frozen = false freezeButton.Text = "\070\114\101\101\122\101\032\067\104\097\114\097\099\116\101\114" end
  ) end
  end
- ) local spinning = false local spinConnection local spinButton = makeButton("\083\112\105\110", funCol1, funY - 0x3C, funTab) funY = funY + 0x2D spinButton.MouseButton1Click:Connect( function () spinning = not spinning if spinning then spinButton.Text = "\083\112\105\110\058\032\079\078" spinConnection = RunService.RenderStepped:Connect( function () local char = player.Character if not char then return end
+ ) local fakeLag = false local fakeLagDelay = 0.20 local fakeLagHold = 0.15 local fakeLagButton = makeButton("\070\097\107\101\032\076\097\103", funCol2, funY, funTab) funY = funY + 0x3C fakeLagButton.MouseButton1Click:Connect( function () fakeLag = not fakeLag if fakeLag then fakeLagButton.Text = "\070\097\107\101\032\076\097\103\058\032\079\078" else fakeLagButton.Text = "\070\097\107\101\032\076\097\103" end
+ end
+ ) task.spawn( function () while true do task.wait(fakeLagDelay) if fakeLag and player.Character then local hrp = player.Character:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not hrp then continue end
+ local savedCFrame = hrp.CFrame hrp.Anchored = true task.wait(fakeLagHold) hrp.Anchored = false hrp.CFrame = savedCFrame end
+ end
+ end
+ ) local spinning = false local spinConnection local spinButton = makeButton("\083\112\105\110", funCol1, funY - 0x3C, funTab) funY = funY + 0x2D local wallClimb = false local wallClimbSpeed = 0x23 local wallClimbButton = makeButton("\087\097\108\108\032\067\108\105\109\098", col1, y + 0x6E, playerTab) wallClimbButton.MouseButton1Click:Connect( function () wallClimb = not wallClimb if wallClimb then wallClimbButton.Text = "\087\097\108\108\032\067\108\105\109\098\058\032\079\078" else wallClimbButton.Text = "\087\097\108\108\032\067\108\105\109\098" end
+ end
+ ) spinButton.MouseButton1Click:Connect( function () spinning = not spinning if spinning then spinButton.Text = "\083\112\105\110\058\032\079\078" spinConnection = RunService.RenderStepped:Connect( function () local char = player.Character if not char then return end
  local hrp = char:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not hrp then return end
  hrp.CFrame = hrp.CFrame * CFrame.Angles(0x0, math.rad(0x19), 0x0) end
  ) else spinButton.Text = "\083\112\105\110" if spinConnection then spinConnection:Disconnect() spinConnection = nil end
@@ -56,6 +64,11 @@ local Players = game:GetService("\080\108\097\121\101\114\115") local RunService
  end
  end
  end
+ end
+ ) RunService.RenderStepped:Connect( function () if not wallClimb then return end
+ if not player.Character then return end
+ local char = player.Character local hrp = char:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not hrp then return end
+ local rayOrigin = hrp.Position local rayDirection = hrp.CFrame.LookVector * 0x3 local rayParams = RaycastParams.new() rayParams.FilterDescendantsInstances = {char} rayParams.FilterType = Enum.RaycastFilterType.Blacklist local result = workspace:Raycast(rayOrigin, rayDirection, rayParams) if result and keys.W then hrp.AssemblyLinearVelocity = Vector3.new( hrp.AssemblyLinearVelocity.X, wallClimbSpeed, hrp.AssemblyLinearVelocity.Z ) end
  end
  ) blackholeButton.MouseButton1Click:Connect( function () blackhole = not blackhole if blackhole then orbiting = false blackholeButton.Text = "\066\108\097\099\107\032\072\111\108\101\058\032\079\078" orbitButton.Text = "\079\114\098\105\116\032\080\097\114\116\115" else blackholeButton.Text = "\066\108\097\099\107\032\072\111\108\101" end
  end
@@ -88,6 +101,9 @@ local Players = game:GetService("\080\108\097\121\101\114\115") local RunService
  if input.KeyCode == Enum.KeyCode.D then keys.D = true end
  if input.KeyCode == Enum.KeyCode.Space then keys.Space = true end
  if input.KeyCode == Enum.KeyCode.LeftControl then keys.Ctrl = true end
+ end
+ ) UIS.JumpRequest:Connect( function () if infJump and player.Character then local hum = player.Character:FindFirstChildOfClass("\072\117\109\097\110\111\105\100") if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+ end
  end
  ) local viewing = false local viewedPlayer = nil local flingInput = Instance.new("\084\101\120\116\066\111\120") flingInput.Size = UDim2.new(0x0,0xDC,0x0,0x23) flingInput.Position = UDim2.new(0.5,-0x6E,0x0,0x14) flingInput.PlaceholderText = "\069\110\116\101\114\032\117\115\101\114\110\097\109\101\032\111\114\032\039\097\108\108\039" flingInput.Text = "" flingInput.TextScaled = true flingInput.BackgroundColor3 = buttonColor flingInput.TextColor3 = Color3.new(0x1,0x1,0x1) flingInput.Parent = serverTab outlineText(flingInput) local flingButton = makeButton("\070\108\105\110\103\032\080\108\097\121\101\114",0x14,0x46,serverTab) local teleportButton = makeButton("\084\101\108\101\112\111\114\116\032\084\111\032\080\108\097\121\101\114",0xF0,0x46,serverTab) local viewPlayerButton = makeButton("\086\105\101\119\032\080\108\097\121\101\114",0x14,0x78,serverTab) local tabs = { Main = mainTab, Player = playerTab, View = viewTab, Server = serverTab, Fun = funTab, Settings = settingsTab } local function switchTab(tabName) for name, frame in pairs(tabs) do frame.Visible = (name == tabName) end
  end
@@ -193,6 +209,16 @@ local Players = game:GetService("\080\108\097\121\101\114\115") local RunService
  if input.KeyCode == Enum.KeyCode.LeftControl then keys.Ctrl = false end
  if input.UserInputType == Enum.UserInputType.MouseButton2 then aiming = false end
  end
+ ) local infJumpButton = makeButton("\073\110\102\105\110\105\116\101\032\074\117\109\112", col2, y + 0x46, playerTab) infJumpButton.MouseButton1Click:Connect( function () infJump = not infJump if infJump then infJumpButton.Text = "\073\110\102\105\110\105\116\101\032\074\117\109\112\058\032\079\078" else infJumpButton.Text = "\073\110\102\105\110\105\116\101\032\074\117\109\112" end
+ end
+ ) local airwalk = false local airwalkHeight = 0x5 local airwalkButton = makeButton("\065\105\114\119\097\108\107", col2, y + 0x78, playerTab) airwalkButton.MouseButton1Click:Connect( function () airwalk = not airwalk local char = player.Character if not char then return end
+ local hum = char:FindFirstChildOfClass("\072\117\109\097\110\111\105\100") if not hum then return end
+ if airwalk then hum.HipHeight = airwalkHeight airwalkButton.Text = "\065\105\114\119\097\108\107\058\032\079\078" else hum.HipHeight = 0x0 airwalkButton.Text = "\065\105\114\119\097\108\107" end
+ end
+ ) player.CharacterAdded:Connect( function (char) local hum = char:WaitForChild("\072\117\109\097\110\111\105\100") if airwalk then hum.HipHeight = airwalkHeight end
+ end
+ ) local heightLabel = Instance.new("\084\101\120\116\076\097\098\101\108") heightLabel.Size = UDim2.new(0x0,0xB4,0x0,0x19) heightLabel.Position = UDim2.new(0x0,col2,0x0,y + 0x9A) heightLabel.Text = "\072\101\105\103\104\116\058\032"..airwalkHeight heightLabel.BackgroundTransparency = 0x1 heightLabel.TextColor3 = Color3.new(0x1,0x1,0x1) heightLabel.Parent = playerTab outlineText(heightLabel) local heightMinus = makeButton("\045", col2, y + 0xAF, playerTab) heightMinus.Size = UDim2.new(0x0,0x50,0x0,0x1E) local heightPlus = makeButton("\043", col2 + 0x5A, y + 0xAF, playerTab) heightPlus.Size = UDim2.new(0x0,0x50,0x0,0x1E) heightPlus.MouseButton1Click:Connect( function () airwalkHeight += 0x1 heightLabel.Text = "\072\101\105\103\104\116\058\032"..airwalkHeight end
+ ) heightMinus.MouseButton1Click:Connect( function () airwalkHeight = math.max(0x0, airwalkHeight - 0x1) heightLabel.Text = "\072\101\105\103\104\116\058\032"..airwalkHeight end
  ) RunService.RenderStepped:Connect( function () if flying and player.Character then local hrp = player.Character:FindFirstChild("\072\117\109\097\110\111\105\100\082\111\111\116\080\097\114\116") if not hrp then return end
  local cam = workspace.CurrentCamera if BG then BG.CFrame = cam.CFrame end
  local direction = Vector3.zero if keys.W then direction += cam.CFrame.LookVector end
